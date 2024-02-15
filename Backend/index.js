@@ -26,6 +26,7 @@ app.get('/', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
 // Route for storing user data in the database
 app.post('/addUser', async (req, res) => {
     try {
