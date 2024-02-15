@@ -1,22 +1,23 @@
 // Import necessary modules
 const express = require('express');
 const {connection}=require("./config/db")
-
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const axios = require('axios');
 const {User} = require('./models/user.model');
 const {Post} = require('./models/post.model');
 const Excel = require('exceljs');
 const fs = require('fs');
+const cors =require('cors')
 
 const app=express();
+app.use(express.json())
 // Route for Home Page
 app.get('/', async (req, res) => {
     try {
         // Fetch data from API
-        const response = await axios.get('https://jsonplaceholder.typicode.com/users');
-        const users = response.data;
-        // Render home page with user data
-        res.send('home', { users });
+        const response=await fetch("https://jsonplaceholder.typicode.com/users")
+        const users=await response.json()
+        res.send(users)
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
@@ -29,11 +30,12 @@ app.post('/addUser', async (req, res) => {
         // Check if user already exists in the database
         const existingUser = await User.findOne({ email: userData.email });
         if (existingUser) {
-            res.redirect('/post/' + existingUser._id);
+            res.send("user already exists in the database")
         } else {
             // Create new user entry in the database
             await User.create(userData);
-            res.redirect('/');
+            // res.redirect('/');
+            res.send("The data is added")
         }
     } catch (error) {
         console.error(error);
@@ -45,10 +47,13 @@ app.get('/post/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
         // Fetch data from API for specific user
-        const response = await axios.get(`https://jsonplaceholder.typicode.com/posts?userId=${userId}`);
-        const posts = response.data;
+        // const response = await fetch(`https://jsonplaceholder.typicode.com/posts?userId=${userId}`);
+        // const users=await response.json()
+        const users=fetch(`https://jsonplaceholder.typicode.com/posts?userId=${userId}`)
+        .then((response) => response.json())
+        .then((json) => res.send(json));
         // Render post page with post data
-        res.render('post', { posts, userId });
+        
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
@@ -61,6 +66,7 @@ app.post('/addPost/:userId', async (req, res) => {
         const postData = req.body;
         // Create new post entries in the database
         await Post.insertMany(postData);
+        
         res.redirect('/post/' + userId);
     } catch (error) {
         console.error(error);
