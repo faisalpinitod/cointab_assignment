@@ -9,8 +9,11 @@ const Excel = require('exceljs');
 const fs = require('fs');
 const cors =require('cors')
 
+
+
 const app=express();
 app.use(express.json())
+app.use(cors())
 // Route for Home Page
 app.get('/', async (req, res) => {
     try {
